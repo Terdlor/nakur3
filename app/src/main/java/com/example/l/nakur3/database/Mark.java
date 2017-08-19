@@ -23,6 +23,8 @@ public class Mark {
     protected Date addDate;
     @DatabaseField
     protected Date synDate;
+    @DatabaseField
+    protected String note;
 
     public int getId() {
         return id;
@@ -62,5 +64,13 @@ public class Mark {
 
     public void setSynDate(Date synDate) {
         this.synDate = synDate;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 }

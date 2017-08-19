@@ -1,14 +1,13 @@
 package com.example.l.nakur3;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
+import android.widget.*;
 import com.example.l.nakur3.database.HelperFactory;
 import com.example.l.nakur3.database.Log;
 import com.example.l.nakur3.database.Mark;
@@ -45,11 +44,48 @@ public class MarkActivity extends AppCompatActivity {
         };
     }
 
-    View.OnClickListener onClickAddMark(Context context){
+    View.OnClickListener onClickAddMark(final Context context){
         return (new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                AlertDialog.Builder adb = new AlertDialog.Builder(context);
+                adb.setTitle("Добавление");
+                // создаем view из dialog.xml
+                View view1 = (LinearLayout) getLayoutInflater()
+                        .inflate(R.layout.dialog_mark, null);
+                // устанавливаем ее, как содержимое тела диалога
+                adb.setView(view1);
 
+                final EditText markInput = (EditText) view1.findViewById(R.id.eNameMark);
+
+                adb
+                        .setCancelable(true)
+                        .setPositiveButton("OK",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        //Вводим текст и отображаем в строке ввода на основном экране:
+                                        try {
+                                            Date cur_date = new Date();
+                                            Mark mark = new Mark();
+                                            mark.setName(markInput.getText().toString());
+                                            mark.setAddDate(new Date());
+                                            mark.setStatus("N");
+                                            mark.setSynDate(null);
+                                            mark.setNote("Добавлено с смартфона");
+                                            markDao.create(mark);
+
+                                        } catch (Exception e){
+                                            Log.showError(context, e);
+                                        }
+
+                                    }
+                                })
+                        .setNegativeButton("Отмена",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                    }
+                                });
+                adb.show();
             }
         });
     }
