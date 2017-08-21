@@ -113,6 +113,7 @@ public class MarkActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialog, int which) {
                             try{
                                 mark.setName(markInput.getText().toString());
+                                mark.setStatus("E");
                                 markDao.update(mark);
                                 setListView(context);
                             }catch (Exception e){
@@ -143,7 +144,8 @@ public class MarkActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             try {
-                                markDao.delete(mark);
+                                mark.setStatus("D");
+                                markDao.update(mark);
                                 setListView(context);
                             } catch (Exception e){
                                 Log.showError(context, e);
@@ -189,7 +191,23 @@ public class MarkActivity extends AppCompatActivity {
                     map.put("SYN_DATE", String.valueOf(mark.getAddDate()));
                     String status = mark.getStatus();
                     map.put("STATUS", status);
-                    map.put("IMAGE", "N".equals(status) ? R.drawable.v_green : R.drawable.x_red);
+                    switch (status) {
+                        case "N":
+                            map.put("IMAGE", R.drawable.plus_green);
+                            break;
+                        case "E":
+                            map.put("IMAGE", R.drawable.arr_yell);
+                            break;
+                        case "D":
+                            map.put("IMAGE", R.drawable.x_red);
+                            break;
+                        case "C":
+                            map.put("IMAGE", R.drawable.v_green);
+                            break;
+                        default:
+                            map.put("IMAGE", R.drawable.xz_blue);
+                            break;
+                    }
                     arrayList.add(map);
                 }
 

@@ -15,6 +15,8 @@ public class Mark {
     }
     @DatabaseField(generatedId = true)
     protected  int id;
+    @DatabaseField
+    protected  int idDB;
     @DatabaseField(canBeNull = false)
     protected  String name;
     @DatabaseField
@@ -72,5 +74,13 @@ public class Mark {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public int getIdDB() {
+        return idDB;
+    }
+
+    public void setIdDB(int idDB) {
+        this.idDB = idDB;
     }
 }
