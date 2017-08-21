@@ -19,4 +19,8 @@ public class MarkDAO extends BaseDaoImpl<Mark, Integer> {
     public List<Mark> getAllMark() throws SQLException{
         return this.queryForAll();
     }
+
+    public Mark getMarkById(int id) throws SQLException{
+        return this.queryForId(id);
+    }
 }

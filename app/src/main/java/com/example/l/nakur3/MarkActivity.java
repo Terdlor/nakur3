@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.*;
 import com.example.l.nakur3.database.HelperFactory;
 import com.example.l.nakur3.database.Log;
@@ -30,18 +31,7 @@ public class MarkActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mark);
         inizView(this);
-        setListView();
-    }
-
-    //noooooo
-    AdapterView.OnItemClickListener onClickItemListMark(final Context context){
-        return new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                 Mark mark = liMark.get(position);
-                 Log.showMassage(context, mark.getName());
-            }
-        };
+        setListView(this);
     }
 
     View.OnClickListener onClickAddMark(final Context context){
@@ -74,6 +64,7 @@ public class MarkActivity extends AppCompatActivity {
                                             mark.setNote("Добавлено с смартфона");
                                             markDao.create(mark);
 
+                                            setListView(context);
                                         } catch (Exception e){
                                             Log.showError(context, e);
                                         }
@@ -90,6 +81,86 @@ public class MarkActivity extends AppCompatActivity {
         });
     }
 
+    View.OnClickListener onClickSendMark(final Context context, final int pos){
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.showMassage(context, String.valueOf(pos));
+            }
+        };
+    }
+
+    View.OnClickListener onClickEditMark(final Context context, final int pos){
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try{
+                    final Mark mark = liMark.get(pos);//  markDao.getMarkById(position);
+                    AlertDialog.Builder adb = new AlertDialog.Builder(context);
+                    adb.setTitle("Изменение");
+                    // создаем view из dialog.xml
+                    View view1 = (LinearLayout) getLayoutInflater()
+                            .inflate(R.layout.dialog_mark, null);
+                    // устанавливаем ее, как содержимое тела диалога
+                    adb.setView(view1);
+
+                    final EditText markInput = (EditText) view1.findViewById(R.id.eNameMark);
+                    markInput.setText(mark.getName());
+                    final TextView dates = (TextView) view1.findViewById(R.id.tDateMark);
+                    //dates.setText(mark.getSynDate().toString());
+                    adb.setPositiveButton("Применить", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            try{
+                                mark.setName(markInput.getText().toString());
+                                markDao.update(mark);
+                                setListView(context);
+                            }catch (Exception e){
+                                Log.showError(context, e);
+                            }
+                        }
+                    });
+                    adb.setNegativeButton("Отмена", null);
+                    adb.setCancelable(true);
+                    adb.create().show();
+                }catch (Exception e){
+                    Log.showError(context, e);
+                }
+            }
+        };
+    }
+
+    View.OnLongClickListener onLongClickDeleteMark (final Context context, final int pos){
+        return new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                try {
+                    final Mark mark =liMark.get(pos);// markDao.getMarkById(position);
+                    AlertDialog.Builder adb = new AlertDialog.Builder(context);
+                    adb.setTitle("Подтверждение");
+                    adb.setMessage("Удалить "+mark.getName()+"?");
+                    adb.setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            try {
+                                markDao.delete(mark);
+                                setListView(context);
+                            } catch (Exception e){
+                                Log.showError(context, e);
+                            }
+                        }
+                    });
+                    adb.setNegativeButton("Отмена", null);
+                    adb.setCancelable(true);
+                    adb.create().show();
+                } catch (Exception e){
+                    Log.showError(context, e);
+                }
+                return  true;
+            }
+        };
+    }
+
     void inizView(Context context){
         try {
             HelperFactory.setHelper(getApplicationContext());
@@ -104,55 +175,46 @@ public class MarkActivity extends AppCompatActivity {
         }
     }
 
-    void setLiMark(){
-        try {
-            if (liMark != null) {
-                liMark.clear();
-            } else {
-                liMark = new ArrayList<>();
+    void setListView(final Context context) {
+            try {
+                liMark = new ArrayList<>(markDao.getAllMark());
+
+                ArrayList<HashMap<String, Object>> arrayList = new ArrayList<>();
+                HashMap<String, Object> map;
+
+                for (Mark mark : liMark) {
+                    map = new HashMap<>();
+                    map.put("ID", String.valueOf(mark.getId()));
+                    map.put("NAME", mark.getName());
+                    map.put("SYN_DATE", String.valueOf(mark.getAddDate()));
+                    String status = mark.getStatus();
+                    map.put("STATUS", status);
+                    map.put("IMAGE", "N".equals(status) ? R.drawable.v_green : R.drawable.x_red);
+                    arrayList.add(map);
+                }
+
+            SimpleAdapter adapter = new SimpleAdapter(this, arrayList, R.layout.single_row,
+                    new String[]{"ID", "NAME", "SYN_DATE", "IMAGE"},
+                    new int[]{R.id.id_row, R.id.name_row, R.id.date_row, R.id.imbtStatus})
+                {
+                    @Override
+                    public View getView(final int position, View convertView, ViewGroup parent) {
+                        final ViewGroup layout = (ViewGroup) super.getView(position, convertView, parent);
+                        ImageButton im = (ImageButton) layout.findViewById(R.id.imbtStatus);
+                        im.setOnClickListener(onClickSendMark(context, position));
+
+                        LinearLayout llsr = (LinearLayout) layout.findViewById(R.id.llsin_row);
+                        llsr.setOnClickListener(onClickEditMark(context, position));
+                        llsr.setOnLongClickListener(onLongClickDeleteMark(context, position));
+
+                        return layout;
+                    }
+                };
+                listMark.setAdapter(adapter);
+
+            } catch (Exception e){
+                Log.showError(this, e);
             }
-
-            for (Mark mark : markDao.getAllMark()){
-                liMark.add(mark);
-            }
-        } catch (Exception e){
-            Log.showError(this, e);
-        }
-    }
-
-    void setListView(){
-try {
-    setLiMark();
-
-    ArrayList<HashMap<String, Object>> arrayList = new ArrayList<>();
-    HashMap<String, Object> map;
-
-    for (Mark mark : liMark) {
-        map = new HashMap<>();
-        map.put("ID", String.valueOf(mark.getId()));
-        map.put("NAME", mark.getName());
-        map.put("SYN_DATE", String.valueOf(mark.getAddDate()));
-        String status = mark.getStatus();
-        int image;
-        map.put("STATUS", status);
-        if (status.equals("N")) {
-            image = R.drawable.v_green;
-        } else {
-            image = R.drawable.x_red;
-        }
-        map.put("IMAGE", image);
-        arrayList.add(map);
-    }
-
-    SimpleAdapter adapter = new SimpleAdapter(this, arrayList, R.layout.single_row,
-            new String[]{"ID", "NAME", "SYN_DATE", "IMAGE"},
-            new int[]{R.id.id_row, R.id.name_row, R.id.date_row, R.id.imbtStatus});
-    listMark.setAdapter(adapter);
-    listMark.setOnItemClickListener(onClickItemListMark(this));
-
-} catch (Exception e){
-    Log.showError(this, e);
-}
     }
 
     @Override

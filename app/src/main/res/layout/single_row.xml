@@ -6,6 +6,7 @@
 
     <LinearLayout
             android:orientation="horizontal"
+            android:id="@+id/llsin_row"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         <TextView
@@ -36,6 +37,8 @@
                 android:layout_marginRight="10dp"
                 android:id="@+id/imbtStatus"
                 android:scaleType="fitXY"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:background="@android:drawable/list_selector_background"/>
     </LinearLayout>
     <TextView
