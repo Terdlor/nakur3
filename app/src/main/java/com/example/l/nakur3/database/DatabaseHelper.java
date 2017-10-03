@@ -24,6 +24,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     //ссылки на DAO соответсвующие сущностям, хранимым в БД
     private MarkDAO markDao = null;
+    private FlavorDAO flavorDao = null;
 
     public DatabaseHelper(Context context){
         super(context,DATABASE_NAME, null, DATABASE_VERSION);
@@ -35,6 +36,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         try
         {
             TableUtils.createTable(connectionSource, Mark.class);
+            TableUtils.createTable(connectionSource, Flavor.class);
         }
         catch (SQLException e){
             Log.e(TAG, "error creating DB " + DATABASE_NAME);
@@ -48,6 +50,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
                           int newVer){
         try{
             //Так делают ленивые, гораздо предпочтительнее не удаляя БД аккуратно вносить изменения
+            TableUtils.dropTable(connectionSource, Flavor.class, true);
             TableUtils.dropTable(connectionSource, Mark.class, true);
             onCreate(db, connectionSource);
         }
@@ -63,6 +66,14 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             markDao = new MarkDAO(getConnectionSource(), Mark.class);
         }
         return markDao;
+    }
+
+    //синглтон для FlavorDAO
+    public FlavorDAO getFlavorDAO() throws SQLException{
+        if(flavorDao == null){
+            flavorDao = new FlavorDAO(getConnectionSource(), Flavor.class);
+        }
+        return flavorDao;
     }
 
     //выполняется при закрытии приложения

@@ -3,9 +3,11 @@ package com.example.l.nakur3;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
@@ -47,7 +49,7 @@ public class MarkActivity extends AppCompatActivity {
                 adb.setView(view1);
 
                 final EditText markInput = (EditText) view1.findViewById(R.id.eNameMark);
-
+                markInput.setInputType(InputType.TYPE_NULL);
                 adb
                         .setCancelable(true)
                         .setPositiveButton("OK",
@@ -86,14 +88,15 @@ public class MarkActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.showMassage(context, String.valueOf(pos));
+
             }
         };
     }
 
-    View.OnClickListener onClickEditMark(final Context context, final int pos){
-        return new View.OnClickListener() {
+    View.OnLongClickListener onLongClickEditMark(final Context context, final  int pos){
+        return new View.OnLongClickListener() {
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View v) {
                 try{
                     final Mark mark = liMark.get(pos);//  markDao.getMarkById(position);
                     AlertDialog.Builder adb = new AlertDialog.Builder(context);
@@ -104,15 +107,20 @@ public class MarkActivity extends AppCompatActivity {
                     // устанавливаем ее, как содержимое тела диалога
                     adb.setView(view1);
 
-                    final EditText markInput = (EditText) view1.findViewById(R.id.eNameMark);
-                    markInput.setText(mark.getName());
+                    final EditText markInputName = (EditText) view1.findViewById(R.id.eNameMark);
+                    markInputName.setText(mark.getName());
+                    markInputName.setInputType(InputType.TYPE_MASK_FLAGS);
+                    final EditText markInputNote = (EditText) view1.findViewById(R.id.eNoteMark);
+                    markInputNote.setText(mark.getNote());
+                    markInputNote.setInputType(InputType.TYPE_MASK_CLASS);
                     final TextView dates = (TextView) view1.findViewById(R.id.tDateMark);
                     //dates.setText(mark.getSynDate().toString());
                     adb.setPositiveButton("Применить", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             try{
-                                mark.setName(markInput.getText().toString());
+                                mark.setName(markInputName.getText().toString());
+                                mark.setNote(markInputNote.getText().toString());
                                 mark.setStatus("E");
                                 markDao.update(mark);
                                 setListView(context);
@@ -122,43 +130,51 @@ public class MarkActivity extends AppCompatActivity {
                         }
                     });
                     adb.setNegativeButton("Отмена", null);
+                    adb.setNeutralButton("Удалить", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            AlertDialog.Builder adb = new AlertDialog.Builder(context);
+                            adb.setTitle("Подтверждение");
+                            adb.setMessage("Удалить "+mark.getName()+"?");
+                            adb.setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    try {
+                                        mark.setStatus("D");
+                                        markDao.update(mark);
+                                        setListView(context);
+                                    } catch (Exception e){
+                                        Log.showError(context, e);
+                                    }
+                                }
+                            });
+                            adb.setNegativeButton("Отмена", null);
+                            adb.setCancelable(true);
+                            adb.create().show();
+                        }
+                    });
                     adb.setCancelable(true);
                     adb.create().show();
                 }catch (Exception e){
                     Log.showError(context, e);
                 }
+                return  true;
             }
         };
     }
 
-    View.OnLongClickListener onLongClickDeleteMark (final Context context, final int pos){
-        return new View.OnLongClickListener() {
+    View.OnClickListener onClickOpenMark(final Context context, final int pos){
+        return new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
+            public void onClick(View v) {
                 try {
-                    final Mark mark =liMark.get(pos);// markDao.getMarkById(position);
-                    AlertDialog.Builder adb = new AlertDialog.Builder(context);
-                    adb.setTitle("Подтверждение");
-                    adb.setMessage("Удалить "+mark.getName()+"?");
-                    adb.setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            try {
-                                mark.setStatus("D");
-                                markDao.update(mark);
-                                setListView(context);
-                            } catch (Exception e){
-                                Log.showError(context, e);
-                            }
-                        }
-                    });
-                    adb.setNegativeButton("Отмена", null);
-                    adb.setCancelable(true);
-                    adb.create().show();
+                    final Mark mark = liMark.get(pos);
+                    Intent intent = new Intent(context, FlavorActivity.class);
+                    intent.putExtra("id", mark.getId());
+                    startActivityForResult(intent, 10);
                 } catch (Exception e){
                     Log.showError(context, e);
                 }
-                return  true;
             }
         };
     }
@@ -188,7 +204,7 @@ public class MarkActivity extends AppCompatActivity {
                     map = new HashMap<>();
                     map.put("ID", String.valueOf(mark.getId()));
                     map.put("NAME", mark.getName());
-                    map.put("SYN_DATE", String.valueOf(mark.getAddDate()));
+                    map.put("SYN_DATE", Log.getDate(mark.getAddDate()));
                     String status = mark.getStatus();
                     map.put("STATUS", status);
                     switch (status) {
@@ -222,8 +238,8 @@ public class MarkActivity extends AppCompatActivity {
                         im.setOnClickListener(onClickSendMark(context, position));
 
                         LinearLayout llsr = (LinearLayout) layout.findViewById(R.id.llsin_row);
-                        llsr.setOnClickListener(onClickEditMark(context, position));
-                        llsr.setOnLongClickListener(onLongClickDeleteMark(context, position));
+                        llsr.setOnClickListener(onClickOpenMark(context, position));
+                        llsr.setOnLongClickListener(onLongClickEditMark(context, position));
 
                         return layout;
                     }

@@ -18,6 +18,20 @@
             android:ems="10"
             android:id="@+id/eNameMark"
             android:layout_gravity="center"/>
+    <TextView
+            android:text="Примечание"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txNoteMark"
+            android:layout_gravity="center"/>
+    <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:text=""
+            android:ems="10"
+            android:id="@+id/eNoteMark"
+            android:layout_gravity="center"/>
     <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
